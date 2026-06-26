@@ -10,6 +10,7 @@ bindLogout();
   const { data: fichas, error } = await supabase
     .from('fichas')
     .select('*')
+    .order('inicio_leitura', { ascending: false, nullsFirst: false })
     .order('updated_at', { ascending: false });
 
   document.getElementById('loading-state').classList.add('hidden');
@@ -30,6 +31,11 @@ bindLogout();
   grid.innerHTML = fichas.map(renderCard).join('');
 })();
 
+function formatDate(isoDate) {
+  const [year, month, day] = isoDate.split('-');
+  return `${day}/${month}/${year}`;
+}
+
 function renderCard(f) {
   const cover = f.capa_path
     ? `<img src="${escapeHtml(f.capa_path)}" alt="Capa de ${escapeHtml(f.titulo)}">`
@@ -43,6 +49,7 @@ function renderCard(f) {
         <h3>${escapeHtml(f.titulo) || '(sem título)'}</h3>
         <span class="meta">${escapeHtml(f.autor) || ''}</span>
         <span class="ficha-stars">${starsDisplay(f.avaliacao)}</span>
+        ${f.inicio_leitura ? `<span class="meta">Início: ${formatDate(f.inicio_leitura)}</span>` : ''}
       </div>
       <div class="ficha-actions">
         <a href="ficha-view.html?id=${f.id}" class="btn-secondary">Abrir</a>

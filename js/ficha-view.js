@@ -90,126 +90,188 @@ async function fetchImageAsDataUrl(url) {
   });
 }
 
+function formatDateBR(isoDate) {
+  if (!isoDate) return null;
+  const [year, month, day] = isoDate.split('-');
+  return `${day}/${month}/${year}`;
+}
+
 async function exportPdf(f) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const NAVY = '#1c2f4a';
   const GOLD = '#b08d3f';
-  const CREAM = '#f7f1e3';
-
-  doc.setFillColor(NAVY);
-  doc.rect(0, 0, 595, 90, 'F');
-  doc.setTextColor(CREAM);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(22);
-  doc.text('FICHA DE LEITURA', 50, 45);
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'normal');
-  doc.text(f.nome_ficha || '', 50, 65);
+  const INK = '#2b2620';
 
   const leftX = 50;
-  const rightX = 230;
-  const topY = 120;
+  const rightX = 250;
+  const pageW = 595;
+
+  // Cabeçalho "FICHA DE leitura"
+  doc.setTextColor('#999999');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text('CAPA DO LIVRO', leftX, 45);
+
+  doc.setTextColor(NAVY);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.text('FICHA DE', rightX, 50);
+  doc.setFontSize(28);
+  doc.text('leitura', rightX, 78);
+
+  // Capa
+  const coverY = 60;
   const coverW = 150;
   const coverH = 210;
-
   doc.setDrawColor(NAVY);
-  doc.setLineWidth(1.5);
-  doc.rect(leftX, topY, coverW, coverH);
+  doc.setLineWidth(1.2);
+  doc.rect(leftX, coverY, coverW, coverH);
 
   if (f.capa_path) {
     try {
       const dataUrl = await fetchImageAsDataUrl(f.capa_path);
       const format = dataUrl.includes('image/png') ? 'PNG' : 'JPEG';
-      doc.addImage(dataUrl, format, leftX + 5, topY + 5, coverW - 10, coverH - 10, undefined, 'FAST');
+      doc.addImage(dataUrl, format, leftX + 4, coverY + 4, coverW - 8, coverH - 8, undefined, 'FAST');
     } catch (e) {
       doc.setTextColor('#999999');
       doc.setFontSize(9);
-      doc.text('Sem capa', leftX + coverW / 2, topY + coverH / 2, { align: 'center' });
+      doc.text('Sem capa', leftX + coverW / 2, coverY + coverH / 2, { align: 'center' });
     }
   } else {
     doc.setTextColor('#999999');
     doc.setFontSize(9);
-    doc.text('Sem capa', leftX + coverW / 2, topY + coverH / 2, { align: 'center' });
+    doc.text('Sem capa', leftX + coverW / 2, coverY + coverH / 2, { align: 'center' });
   }
 
+  // Estrelas abaixo da capa (desenhadas, pois fontes padrão não têm glifo de estrela)
   const rating = Math.max(0, Math.min(5, f.avaliacao || 0));
-  doc.setFontSize(16);
-  doc.setTextColor(GOLD);
-  let starX = leftX;
+  let starX = leftX + 6;
+  const starY = coverY + coverH + 20;
   for (let i = 0; i < 5; i++) {
-    doc.setTextColor(i < rating ? GOLD : '#cccccc');
-    doc.text('★', starX, topY + coverH + 24);
-    starX += 18;
+    drawStar(doc, starX, starY, 6, i < rating ? GOLD : '#cccccc');
+    starX += 20;
   }
 
-  doc.setTextColor('#000000');
-  doc.setFontSize(10);
-  let infoY = topY + coverH + 52;
-  const infoLine = (label, value) => {
-    doc.setFont('helvetica', 'bold');
-    doc.text(label, leftX, infoY);
+  // Título / Autor / Editora (lado direito, estilo "linha para preencher")
+  const labelValue = (label, value, y) => {
+    doc.setTextColor(INK);
     doc.setFont('helvetica', 'normal');
-    doc.text(' ' + (value || '-'), leftX + doc.getTextWidth(label), infoY);
-    infoY += 16;
-  };
-  infoLine('Páginas:', String(f.numero_paginas || '-'));
-  infoLine('Tipo:', f.tipo === 'fisico' ? 'Físico' : f.tipo === 'digital' ? 'Digital' : '-');
-  infoLine('Início:', f.inicio_leitura);
-  infoLine('Término:', f.termino_leitura);
-
-  let ry = topY;
-  const rightBlock = (label, value) => {
-    doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
-    doc.setTextColor(NAVY);
-    doc.text(label, rightX, ry);
-    ry += 16;
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor('#000000');
-    const lines = doc.splitTextToSize(value || '-', 320);
-    doc.text(lines, rightX, ry);
-    ry += 16 * lines.length + 16;
-  };
-
-  rightBlock('Título', f.titulo);
-  rightBlock('Autor', f.autor);
-  rightBlock('Editora', f.editora);
-
-  const temasLabels =
-    TEMAS.filter((t) => (f.temas || []).includes(t.key))
-      .map((t) => t.label)
-      .join(', ') || '-';
-  rightBlock('Temas abordados', temasLabels);
-
-  let y = Math.max(infoY + 20, ry + 20);
-  if (y > 700) {
-    doc.addPage();
-    y = 60;
-  }
-
-  const section = (title, value) => {
+    doc.text(label, rightX, y);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
-    doc.setTextColor(NAVY);
-    doc.text(title, leftX, y);
-    y += 18;
+    doc.text(value || '—', rightX + doc.getTextWidth(label) + 4, y);
+    doc.setDrawColor('#cccccc');
+    doc.setLineWidth(0.5);
+    doc.line(rightX, y + 6, pageW - 50, y + 6);
+  };
+  labelValue('Título:', f.titulo, 110);
+  labelValue('Autor:', f.autor, 145);
+  labelValue('Editora:', f.editora, 180);
+
+  // N° de páginas e tipo de livro (abaixo da capa, esquerda)
+  let leftY = coverY + coverH + 55;
+  doc.setTextColor(INK);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.text(`N° de páginas: ${f.numero_paginas || '—'}`, leftX, leftY);
+  leftY += 22;
+
+  doc.text('Livro:', leftX, leftY);
+  leftY += 18;
+  drawCircleOption(doc, leftX, leftY, 'Físico', f.tipo === 'fisico', NAVY, INK);
+  leftY += 18;
+  drawCircleOption(doc, leftX, leftY, 'Digital', f.tipo === 'digital', NAVY, INK);
+  leftY += 28;
+
+  // Temas abordados (checklist, como no modelo original)
+  doc.setFont('helvetica', 'normal');
+  doc.text('Temas abordados:', leftX, leftY);
+  leftY += 18;
+  const selectedTemas = f.temas || [];
+  TEMAS.forEach((t) => {
+    drawCircleOption(doc, leftX, leftY, t.label, selectedTemas.includes(t.key), NAVY, INK);
+    leftY += 17;
+  });
+
+  // Início / término da leitura (lado direito)
+  let rightY = 215;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(INK);
+  doc.text('início da leitura', rightX, rightY);
+  doc.text('término da leitura', rightX + 150, rightY);
+  rightY += 18;
+  doc.setFont('helvetica', 'bold');
+  doc.text(formatDateBR(f.inicio_leitura) || '—', rightX, rightY);
+  drawArrow(doc, rightX + 122, rightY - 4, 18, INK);
+  doc.text(formatDateBR(f.termino_leitura) || '—', rightX + 150, rightY);
+  rightY += 35;
+
+  // Frase favorita / Personagens / Críticas (lado direito, com linhas)
+  const textBlock = (title, value, y, lines = 3) => {
     doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(INK);
+    doc.text(title, rightX, y);
+    y += 16;
     doc.setFontSize(10);
-    doc.setTextColor('#000000');
-    const lines = doc.splitTextToSize(value || '-', 495);
-    doc.text(lines, leftX, y);
-    y += 14 * lines.length + 20;
-    if (y > 750) {
-      doc.addPage();
-      y = 60;
+    const wrapped = doc.splitTextToSize(value || '—', pageW - 50 - rightX);
+    doc.text(wrapped.slice(0, lines), rightX, y);
+    for (let i = 0; i < lines; i++) {
+      doc.setDrawColor('#cccccc');
+      doc.setLineWidth(0.5);
+      doc.line(rightX, y + i * 14 + 4, pageW - 50, y + i * 14 + 4);
     }
+    return y + lines * 14 + 14;
   };
 
-  section('Frase favorita', f.frase_favorita);
-  section('Personagens', f.personagens);
-  section('Críticas', f.criticas);
+  rightY = textBlock('Frase favorita:', f.frase_favorita, rightY, 3);
+  rightY = textBlock('Personagens:', f.personagens, rightY, 3);
+  rightY = textBlock('Críticas:', f.criticas, rightY, 4);
 
   const filename = `ficha-${(f.nome_ficha || 'leitura').replace(/[^a-z0-9-_]+/gi, '_')}.pdf`;
   doc.save(filename);
+}
+
+function drawStar(doc, cx, cy, outerR, color) {
+  const innerR = outerR * 0.42;
+  const points = [];
+  for (let i = 0; i < 10; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const angle = Math.PI / 2 + (i * Math.PI) / 5;
+    points.push([cx + r * Math.cos(angle), cy - r * Math.sin(angle)]);
+  }
+  doc.setFillColor(color);
+  doc.setDrawColor(color);
+  doc.setLineWidth(0.4);
+  const lines = [];
+  for (let i = 1; i < points.length; i++) {
+    lines.push([points[i][0] - points[i - 1][0], points[i][1] - points[i - 1][1]]);
+  }
+  lines.push([points[0][0] - points[points.length - 1][0], points[0][1] - points[points.length - 1][1]]);
+  doc.lines(lines, points[0][0], points[0][1], [1, 1], 'FD', true);
+}
+
+function drawArrow(doc, x, y, length, color) {
+  doc.setDrawColor(color);
+  doc.setFillColor(color);
+  doc.setLineWidth(1);
+  doc.line(x, y, x + length - 4, y);
+  doc.triangle(x + length - 4, y - 3, x + length - 4, y + 3, x + length, y, 'F');
+}
+
+function drawCircleOption(doc, x, y, label, checked, navy, ink) {
+  const r = 5;
+  doc.setDrawColor(navy);
+  doc.setLineWidth(1);
+  doc.circle(x + r, y - 4, r, checked ? 'FD' : 'D');
+  if (checked) {
+    doc.setFillColor(navy);
+    doc.circle(x + r, y - 4, r, 'F');
+  }
+  doc.setTextColor(ink);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text(label, x + r * 2 + 6, y);
 }
