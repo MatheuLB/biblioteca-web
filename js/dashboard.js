@@ -1,10 +1,31 @@
 import { supabase, TEMAS } from './supabaseClient.js';
-import { requireSession, bindLogout, starsDisplay, escapeHtml } from './common.js';
+import { requireSession, bindLogout, starsDisplay, escapeHtml, initOfflineBanner } from './common.js?v=2';
 import { drawFichaPage } from './pdfFicha.js';
 import { initThemeToggle } from './theme.js';
+import { registerServiceWorker } from './pwa.js';
+import { cacheFichas, getCachedFichas, enqueueDelete, flushQueue } from './offlineQueue.js';
 
 bindLogout();
 initThemeToggle();
+registerServiceWorker();
+initOfflineBanner(async () => {
+  const result = await flushQueue(supabase);
+  if (result.synced > 0) {
+    const { data: refreshed } = await supabase
+      .from('fichas')
+      .select('*')
+      .order('inicio_leitura', { ascending: false, nullsFirst: false })
+      .order('updated_at', { ascending: false });
+    if (refreshed) {
+      allFichas = refreshed;
+      cacheFichas(allFichas);
+      populateTemaFilter();
+      renderStats(allFichas);
+      applyFilters();
+    }
+  }
+  return result;
+});
 
 let allFichas = [];
 
@@ -20,18 +41,21 @@ let allFichas = [];
 
   document.getElementById('loading-state').classList.add('hidden');
 
-  if (error) {
-    document.getElementById('loading-state').classList.remove('hidden');
-    document.getElementById('loading-state').textContent = 'Erro ao carregar fichas: ' + error.message;
-    return;
+  if (error || !navigator.onLine) {
+    allFichas = getCachedFichas();
+    if (allFichas.length === 0) {
+      document.getElementById('empty-state').classList.remove('hidden');
+      return;
+    }
+  } else {
+    if (!fichas || fichas.length === 0) {
+      document.getElementById('empty-state').classList.remove('hidden');
+      return;
+    }
+    allFichas = fichas;
+    cacheFichas(allFichas);
   }
 
-  if (!fichas || fichas.length === 0) {
-    document.getElementById('empty-state').classList.remove('hidden');
-    return;
-  }
-
-  allFichas = fichas;
   document.getElementById('search-bar').classList.remove('hidden');
   document.getElementById('export-all-btn').classList.remove('hidden');
   populateTemaFilter();
@@ -178,6 +202,16 @@ function bindDeleteButtons() {
       if (!confirm('Excluir esta ficha permanentemente?')) return;
 
       btn.disabled = true;
+
+      if (!navigator.onLine) {
+        enqueueDelete(id);
+        allFichas = allFichas.filter((f) => f.id !== id);
+        cacheFichas(allFichas);
+        renderStats(allFichas);
+        applyFilters();
+        return;
+      }
+
       const { error } = await supabase.from('fichas').delete().eq('id', id);
       if (error) {
         alert('Erro ao excluir: ' + error.message);
@@ -185,6 +219,7 @@ function bindDeleteButtons() {
         return;
       }
       allFichas = allFichas.filter((f) => f.id !== id);
+      cacheFichas(allFichas);
       renderStats(allFichas);
       applyFilters();
     });

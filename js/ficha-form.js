@@ -1,10 +1,14 @@
 import { supabase, TEMAS } from './supabaseClient.js';
-import { requireSession, bindLogout } from './common.js';
+import { requireSession, bindLogout, initOfflineBanner } from './common.js?v=2';
 import { initThemeToggle } from './theme.js';
 import { openCropModal } from './coverCrop.js';
+import { registerServiceWorker } from './pwa.js';
+import { flushQueue } from './offlineQueue.js';
 
 bindLogout();
 initThemeToggle();
+registerServiceWorker();
+initOfflineBanner(() => flushQueue(supabase));
 
 const params = new URLSearchParams(window.location.search);
 const fichaId = params.get('id');
@@ -93,6 +97,12 @@ document.getElementById('capa').addEventListener('change', async (e) => {
 
 document.getElementById('ficha-form').addEventListener('submit', async (e) => {
   e.preventDefault();
+
+  if (!navigator.onLine) {
+    showError('Você está offline. Criar ou editar fichas exige conexão com a internet (a exclusão funciona offline e sincroniza depois).');
+    return;
+  }
+
   const submitBtn = document.getElementById('submit-btn');
   submitBtn.disabled = true;
   submitBtn.textContent = 'Salvando...';

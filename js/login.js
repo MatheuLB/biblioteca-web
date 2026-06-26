@@ -1,4 +1,7 @@
 import { supabase, FIXED_EMAIL } from './supabaseClient.js';
+import { registerServiceWorker } from './pwa.js';
+
+registerServiceWorker();
 
 const SPINE_COLORS = ['#5a2a27', '#6b3a23', '#4a3624', '#3f4a3a', '#2d3b4a', '#5c3a4a', '#6b5a2e', '#3a2c20'];
 

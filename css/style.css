@@ -443,3 +443,13 @@ h1, h2, h3 { font-family: 'Playfair Display', Georgia, serif; margin: 0; }
 }
 #crop-zoom { width: 220px; }
 .crop-modal-actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+
+/* ---------- OFFLINE BANNER ---------- */
+.offline-banner {
+  text-align: center;
+  font-size: 13px;
+  padding: 8px 16px;
+  font-family: inherit;
+}
+.offline-banner-warning { background: #fff3cd; color: #7a5c00; }
+.offline-banner-success { background: #d8f0dc; color: #1f5c2e; }

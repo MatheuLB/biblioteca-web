@@ -28,3 +28,36 @@ export function escapeHtml(str) {
   div.textContent = str || '';
   return div.innerHTML;
 }
+
+export function initOfflineBanner(onReconnect) {
+  const banner = document.createElement('div');
+  banner.id = 'offline-banner';
+  banner.className = 'offline-banner hidden';
+  document.body.prepend(banner);
+
+  function render() {
+    if (!navigator.onLine) {
+      banner.textContent = '📡 Você está offline — exibindo dados salvos. Alterações serão sincronizadas quando a conexão voltar.';
+      banner.classList.remove('hidden', 'offline-banner-success');
+      banner.classList.add('offline-banner-warning');
+    } else {
+      banner.classList.add('hidden');
+    }
+  }
+
+  window.addEventListener('offline', render);
+  window.addEventListener('online', async () => {
+    render();
+    if (onReconnect) {
+      const result = await onReconnect();
+      if (result && result.synced > 0) {
+        banner.textContent = `✅ Conexão restabelecida — ${result.synced} alteração(ões) sincronizada(s).`;
+        banner.classList.remove('hidden', 'offline-banner-warning');
+        banner.classList.add('offline-banner-success');
+        setTimeout(() => banner.classList.add('hidden'), 4000);
+      }
+    }
+  });
+
+  render();
+}

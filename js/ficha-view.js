@@ -1,10 +1,14 @@
 import { supabase, TEMAS } from './supabaseClient.js';
-import { requireSession, bindLogout, starsDisplay, escapeHtml } from './common.js';
+import { requireSession, bindLogout, starsDisplay, escapeHtml, initOfflineBanner } from './common.js?v=2';
 import { drawFichaPage } from './pdfFicha.js';
 import { initThemeToggle } from './theme.js';
+import { registerServiceWorker } from './pwa.js';
+import { getCachedFichas, enqueueDelete, cacheFichas, flushQueue } from './offlineQueue.js';
 
 bindLogout();
 initThemeToggle();
+registerServiceWorker();
+initOfflineBanner(() => flushQueue(supabase));
 
 const params = new URLSearchParams(window.location.search);
 const fichaId = params.get('id');
@@ -24,14 +28,16 @@ let currentFicha = null;
 
   document.getElementById('loading-state').classList.add('hidden');
 
-  if (error || !ficha) {
+  const fichaToRender = !error && ficha ? ficha : getCachedFichas().find((f) => f.id === fichaId);
+
+  if (!fichaToRender) {
     document.getElementById('loading-state').classList.remove('hidden');
-    document.getElementById('loading-state').textContent = 'Ficha não encontrada.';
+    document.getElementById('loading-state').textContent = 'Ficha não encontrada (e não disponível offline).';
     return;
   }
 
-  currentFicha = ficha;
-  renderFicha(ficha);
+  currentFicha = fichaToRender;
+  renderFicha(currentFicha);
   document.getElementById('ficha-detail').classList.remove('hidden');
 })();
 
@@ -64,6 +70,15 @@ function renderFicha(f) {
 
 document.getElementById('delete-btn').addEventListener('click', async () => {
   if (!confirm('Excluir esta ficha permanentemente?')) return;
+
+  if (!navigator.onLine) {
+    enqueueDelete(fichaId);
+    const cached = getCachedFichas().filter((f) => f.id !== fichaId);
+    cacheFichas(cached);
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
   await supabase.from('fichas').delete().eq('id', fichaId);
   window.location.href = 'dashboard.html';
 });
