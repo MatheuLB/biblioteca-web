@@ -177,6 +177,20 @@ h1, h2, h3 { font-family: 'Playfair Display', Georgia, serif; margin: 0; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; }
 .toolbar h2 { color: var(--navy); font-size: 24px; }
 
+.search-bar { margin-bottom: 22px; }
+.search-bar input {
+  width: 100%;
+  padding: 11px 16px;
+  border: 1px solid var(--cream-dark);
+  border-bottom: 2px solid var(--gold);
+  border-radius: 4px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 14px;
+}
+.search-bar input:focus { outline: none; border-color: var(--gold); }
+.search-bar input::-webkit-search-cancel-button { cursor: pointer; }
+
 .btn-primary {
   background: var(--navy);
   color: var(--cream);

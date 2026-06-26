@@ -3,6 +3,8 @@ import { requireSession, bindLogout, starsDisplay, escapeHtml } from './common.j
 
 bindLogout();
 
+let allFichas = [];
+
 (async () => {
   const session = await requireSession();
   if (!session) return;
@@ -26,17 +28,56 @@ bindLogout();
     return;
   }
 
-  const grid = document.getElementById('fichas-grid');
-  grid.classList.remove('hidden');
-  grid.innerHTML = fichas.map(renderCard).join('');
-  bindDeleteButtons();
+  allFichas = fichas;
+  document.getElementById('search-bar').classList.remove('hidden');
+  renderGrid(allFichas);
+
+  document.getElementById('search-input').addEventListener('input', (e) => {
+    const term = normalize(e.target.value.trim());
+    if (!term) {
+      renderGrid(allFichas);
+      return;
+    }
+    const filtered = allFichas.filter(
+      (f) =>
+        normalize(f.nome_ficha).includes(term) ||
+        normalize(f.titulo).includes(term) ||
+        normalize(f.autor).includes(term)
+    );
+    renderGrid(filtered);
+  });
 })();
+
+function normalize(str) {
+  return (str || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '');
+}
+
+function renderGrid(list) {
+  const grid = document.getElementById('fichas-grid');
+  const emptyState = document.getElementById('empty-state');
+  const noResultsState = document.getElementById('no-results-state');
+
+  if (list.length === 0) {
+    grid.classList.add('hidden');
+    emptyState.classList.add('hidden');
+    noResultsState.classList.remove('hidden');
+    return;
+  }
+
+  noResultsState.classList.add('hidden');
+  emptyState.classList.add('hidden');
+  grid.classList.remove('hidden');
+  grid.innerHTML = list.map(renderCard).join('');
+  bindDeleteButtons();
+}
 
 function bindDeleteButtons() {
   document.querySelectorAll('.btn-delete-ficha').forEach((btn) => {
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
-      const card = btn.closest('.ficha-card');
       const id = btn.dataset.id;
       if (!confirm('Excluir esta ficha permanentemente?')) return;
 
@@ -47,11 +88,8 @@ function bindDeleteButtons() {
         btn.disabled = false;
         return;
       }
-      card.remove();
-      if (!document.querySelector('.ficha-card')) {
-        document.getElementById('fichas-grid').classList.add('hidden');
-        document.getElementById('empty-state').classList.remove('hidden');
-      }
+      allFichas = allFichas.filter((f) => f.id !== id);
+      renderGrid(allFichas);
     });
   });
 }
