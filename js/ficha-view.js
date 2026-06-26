@@ -102,28 +102,46 @@ async function exportPdf(f) {
   const NAVY = '#1c2f4a';
   const GOLD = '#b08d3f';
   const INK = '#2b2620';
-
-  const leftX = 50;
-  const rightX = 250;
   const pageW = 595;
+  const pageH = 842;
+
+  // Moldura decorativa (borda dupla)
+  doc.setDrawColor(NAVY);
+  doc.setLineWidth(1.5);
+  doc.rect(24, 24, pageW - 48, pageH - 48);
+  doc.setDrawColor(GOLD);
+  doc.setLineWidth(0.75);
+  doc.rect(32, 32, pageW - 64, pageH - 64);
+
+  const leftX = 60;
+  const rightX = 262;
+  const rightMargin = pageW - 60;
 
   // Cabeçalho "FICHA DE leitura"
   doc.setTextColor('#999999');
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  doc.text('CAPA DO LIVRO', leftX, 45);
+  doc.text('CAPA DO LIVRO', leftX, 58);
 
   doc.setTextColor(NAVY);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(20);
-  doc.text('FICHA DE', rightX, 50);
-  doc.setFontSize(28);
-  doc.text('leitura', rightX, 78);
+  doc.text('FICHA DE', rightX, 62);
+  doc.setFontSize(30);
+  doc.text('leitura', rightX, 92);
+  doc.setDrawColor(GOLD);
+  doc.setLineWidth(1);
+  doc.line(rightX, 100, rightMargin, 100);
+
+  // Divisória vertical entre as colunas
+  doc.setDrawColor('#e3dac8');
+  doc.setLineWidth(0.75);
+  doc.line(225, 58, 225, pageH - 60);
 
   // Capa
-  const coverY = 60;
+  const coverY = 72;
   const coverW = 150;
-  const coverH = 210;
+  const coverH = 215;
   doc.setDrawColor(NAVY);
   doc.setLineWidth(1.2);
   doc.rect(leftX, coverY, coverW, coverH);
@@ -153,21 +171,25 @@ async function exportPdf(f) {
     starX += 20;
   }
 
-  // Título / Autor / Editora (lado direito, estilo "linha para preencher")
+  // Nome da ficha (etiqueta)
+  doc.setTextColor(GOLD);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.text((f.nome_ficha || '').toUpperCase(), rightX, 112);
+
+  // Título / Autor / Editora (lado direito)
   const labelValue = (label, value, y) => {
     doc.setTextColor(INK);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(11);
     doc.text(label, rightX, y);
     doc.setFont('helvetica', 'bold');
-    doc.text(value || '—', rightX + doc.getTextWidth(label) + 4, y);
-    doc.setDrawColor('#cccccc');
-    doc.setLineWidth(0.5);
-    doc.line(rightX, y + 6, pageW - 50, y + 6);
+    doc.setFontSize(13);
+    doc.text(value || '—', rightX, y + 17);
   };
-  labelValue('Título:', f.titulo, 110);
-  labelValue('Autor:', f.autor, 145);
-  labelValue('Editora:', f.editora, 180);
+  labelValue('Título', f.titulo, 138);
+  labelValue('Autor', f.autor, 182);
+  labelValue('Editora', f.editora, 226);
 
   // N° de páginas e tipo de livro (abaixo da capa, esquerda)
   let leftY = coverY + coverH + 55;
@@ -186,49 +208,71 @@ async function exportPdf(f) {
 
   // Temas abordados (checklist, como no modelo original)
   doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(INK);
   doc.text('Temas abordados:', leftX, leftY);
-  leftY += 18;
+  leftY += 20;
   const selectedTemas = f.temas || [];
   TEMAS.forEach((t) => {
     drawCircleOption(doc, leftX, leftY, t.label, selectedTemas.includes(t.key), NAVY, INK);
-    leftY += 17;
+    leftY += 19;
   });
 
+  // Ornamento decorativo de fechamento da coluna esquerda
+  leftY += 24;
+  const ornamentCx = leftX + 60;
+  doc.setDrawColor(GOLD);
+  doc.setLineWidth(0.75);
+  doc.line(leftX, leftY, ornamentCx - 10, leftY);
+  doc.line(ornamentCx + 10, leftY, leftX + 130, leftY);
+  drawStar(doc, ornamentCx, leftY, 5, GOLD);
+
   // Início / término da leitura (lado direito)
-  let rightY = 215;
+  let rightY = 264;
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setTextColor(INK);
   doc.text('início da leitura', rightX, rightY);
   doc.text('término da leitura', rightX + 150, rightY);
   rightY += 18;
   doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
   doc.text(formatDateBR(f.inicio_leitura) || '—', rightX, rightY);
   drawArrow(doc, rightX + 122, rightY - 4, 18, INK);
   doc.text(formatDateBR(f.termino_leitura) || '—', rightX + 150, rightY);
-  rightY += 35;
+  rightY += 34;
 
-  // Frase favorita / Personagens / Críticas (lado direito, com linhas)
-  const textBlock = (title, value, y, lines = 3) => {
-    doc.setFont('helvetica', 'normal');
+  // Frase favorita / Personagens / Críticas (lado direito, em caixas com borda)
+  const textBox = (title, value, y, boxHeight, lines) => {
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
-    doc.setTextColor(INK);
+    doc.setTextColor(NAVY);
     doc.text(title, rightX, y);
-    y += 16;
+    y += 12;
+
+    doc.setDrawColor('#d8cdb0');
+    doc.setLineWidth(0.75);
+    doc.roundedRect(rightX, y, rightMargin - rightX, boxHeight, 4, 4);
+
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    const wrapped = doc.splitTextToSize(value || '—', pageW - 50 - rightX);
-    doc.text(wrapped.slice(0, lines), rightX, y);
-    for (let i = 0; i < lines; i++) {
-      doc.setDrawColor('#cccccc');
-      doc.setLineWidth(0.5);
-      doc.line(rightX, y + i * 14 + 4, pageW - 50, y + i * 14 + 4);
-    }
-    return y + lines * 14 + 14;
+    doc.setTextColor(INK);
+    const wrapped = doc.splitTextToSize(value || '—', rightMargin - rightX - 20);
+    doc.text(wrapped.slice(0, lines), rightX + 10, y + 18);
+
+    return y + boxHeight + 22;
   };
 
-  rightY = textBlock('Frase favorita:', f.frase_favorita, rightY, 3);
-  rightY = textBlock('Personagens:', f.personagens, rightY, 3);
-  rightY = textBlock('Críticas:', f.criticas, rightY, 4);
+  rightY = textBox('Frase favorita', f.frase_favorita, rightY, 70, 4);
+  rightY = textBox('Personagens', f.personagens, rightY, 80, 5);
+  rightY = textBox('Críticas', f.criticas, rightY, 150, 9);
+
+  // Rodapé
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor('#a89a78');
+  const geradoEm = new Date().toLocaleDateString('pt-BR');
+  doc.text(`Ficha gerada em ${geradoEm} · Biblioteca Pessoal`, pageW / 2, pageH - 42, { align: 'center' });
 
   const filename = `ficha-${(f.nome_ficha || 'leitura').replace(/[^a-z0-9-_]+/gi, '_')}.pdf`;
   doc.save(filename);
