@@ -1,7 +1,10 @@
-import { supabase } from './supabaseClient.js';
+import { supabase, TEMAS } from './supabaseClient.js';
 import { requireSession, bindLogout, starsDisplay, escapeHtml } from './common.js';
+import { drawFichaPage } from './pdfFicha.js';
+import { initThemeToggle } from './theme.js';
 
 bindLogout();
+initThemeToggle();
 
 let allFichas = [];
 
@@ -30,29 +33,122 @@ let allFichas = [];
 
   allFichas = fichas;
   document.getElementById('search-bar').classList.remove('hidden');
-  renderGrid(allFichas);
+  document.getElementById('export-all-btn').classList.remove('hidden');
+  populateTemaFilter();
+  renderStats(allFichas);
+  applyFilters();
 
-  document.getElementById('search-input').addEventListener('input', (e) => {
-    const term = normalize(e.target.value.trim());
-    if (!term) {
-      renderGrid(allFichas);
-      return;
-    }
-    const filtered = allFichas.filter(
-      (f) =>
-        normalize(f.nome_ficha).includes(term) ||
-        normalize(f.titulo).includes(term) ||
-        normalize(f.autor).includes(term)
-    );
-    renderGrid(filtered);
-  });
+  document.getElementById('search-input').addEventListener('input', applyFilters);
+  document.getElementById('filter-tema').addEventListener('change', applyFilters);
+  document.getElementById('filter-avaliacao').addEventListener('change', applyFilters);
 })();
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== '/') return;
+  const tag = document.activeElement.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  const input = document.getElementById('search-input');
+  if (!input) return;
+  e.preventDefault();
+  input.focus();
+});
+
+document.getElementById('export-all-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('export-all-btn');
+  btn.disabled = true;
+  btn.textContent = 'Gerando PDF...';
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    for (let i = 0; i < allFichas.length; i++) {
+      if (i > 0) doc.addPage();
+      await drawFichaPage(doc, allFichas[i]);
+    }
+    doc.save('minha-biblioteca.pdf');
+  } catch (err) {
+    alert('Erro ao gerar PDF: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⬇ Exportar estante (PDF)';
+  }
+});
+
+function populateTemaFilter() {
+  const select = document.getElementById('filter-tema');
+  const usedKeys = new Set();
+  allFichas.forEach((f) => (f.temas || []).forEach((k) => usedKeys.add(k)));
+  TEMAS.filter((t) => usedKeys.has(t.key)).forEach((t) => {
+    const opt = document.createElement('option');
+    opt.value = t.key;
+    opt.textContent = t.label;
+    select.appendChild(opt);
+  });
+}
 
 function normalize(str) {
   return (str || '')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '');
+}
+
+function applyFilters() {
+  const term = normalize(document.getElementById('search-input').value.trim());
+  const tema = document.getElementById('filter-tema').value;
+  const minRating = parseInt(document.getElementById('filter-avaliacao').value, 10) || 0;
+
+  let filtered = allFichas;
+
+  if (term) {
+    filtered = filtered.filter(
+      (f) =>
+        normalize(f.nome_ficha).includes(term) ||
+        normalize(f.titulo).includes(term) ||
+        normalize(f.autor).includes(term)
+    );
+  }
+  if (tema) {
+    filtered = filtered.filter((f) => (f.temas || []).includes(tema));
+  }
+  if (minRating) {
+    filtered = filtered.filter((f) => (f.avaliacao || 0) >= minRating);
+  }
+
+  renderGrid(filtered);
+}
+
+function renderStats(fichas) {
+  const totalLivros = fichas.length;
+  const totalPaginas = fichas.reduce((sum, f) => sum + (f.numero_paginas || 0), 0);
+  const avaliadas = fichas.filter((f) => f.avaliacao > 0);
+  const mediaAvaliacao = avaliadas.length
+    ? (avaliadas.reduce((sum, f) => sum + f.avaliacao, 0) / avaliadas.length).toFixed(1)
+    : '—';
+
+  const temaCounts = {};
+  fichas.forEach((f) => (f.temas || []).forEach((k) => (temaCounts[k] = (temaCounts[k] || 0) + 1)));
+  let temaTopo = '—';
+  let maxCount = 0;
+  Object.entries(temaCounts).forEach(([key, count]) => {
+    if (count > maxCount) {
+      maxCount = count;
+      const temaInfo = TEMAS.find((t) => t.key === key);
+      temaTopo = temaInfo ? temaInfo.label : key;
+    }
+  });
+
+  const stats = [
+    { label: 'Livros na estante', value: totalLivros },
+    { label: 'Páginas registradas', value: totalPaginas.toLocaleString('pt-BR') },
+    { label: 'Avaliação média', value: mediaAvaliacao === '—' ? '—' : `${mediaAvaliacao} ★` },
+    { label: 'Tema mais lido', value: temaTopo },
+  ];
+
+  const grid = document.getElementById('stats-grid');
+  grid.innerHTML = stats
+    .map((s) => `<div class="stat-card"><span class="stat-value">${s.value}</span><span class="stat-label">${s.label}</span></div>`)
+    .join('');
+  grid.classList.remove('hidden');
 }
 
 function renderGrid(list) {
@@ -89,7 +185,8 @@ function bindDeleteButtons() {
         return;
       }
       allFichas = allFichas.filter((f) => f.id !== id);
-      renderGrid(allFichas);
+      renderStats(allFichas);
+      applyFilters();
     });
   });
 }

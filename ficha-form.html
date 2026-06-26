@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <script>(function(){try{var t=localStorage.getItem("biblioteca-theme");document.documentElement.setAttribute("data-theme", t==="dark"?"dark":"light");}catch(e){}})();</script>
   <meta charset="UTF-8">
   <title>Ficha de leitura</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,7 +12,7 @@
 <body>
   <header class="app-header">
     <h1><a href="dashboard.html" class="header-home-link">📚 Minha Biblioteca</a></h1>
-    <a href="dashboard.html" class="btn-link">Voltar</a>
+    <div class="header-actions"><button id="theme-toggle-btn" class="btn-link" title="Alternar tema" aria-label="Alternar tema claro/escuro">🌙</button><a href="dashboard.html" class="btn-link">Voltar</a></div>
   </header>
 
   <div class="container">
@@ -34,7 +35,7 @@
         <div class="cover-upload">
           <img id="cover-preview" class="hidden" alt="Capa">
           <input type="file" id="capa" accept="image/png,image/jpeg,image/webp">
-          <span class="field-hint">PNG, JPG ou WEBP, até 8MB</span>
+          <span class="field-hint">PNG, JPG ou WEBP, até 8MB — você poderá ajustar o recorte antes de salvar</span>
         </div>
       </div>
 
@@ -112,6 +113,21 @@
     </form>
   </div>
 
-  <script type="module" src="js/ficha-form.js?v=3"></script>
+  <div class="crop-modal hidden" id="crop-modal">
+    <div class="crop-modal-inner">
+      <h3>Ajustar capa</h3>
+      <p class="field-hint">Arraste a imagem para posicionar e use o controle para ajustar o zoom.</p>
+      <div class="crop-viewport" id="crop-viewport">
+        <img id="crop-image" draggable="false" alt="Capa a recortar">
+      </div>
+      <input type="range" id="crop-zoom" min="1" max="3" step="0.01" value="1">
+      <div class="crop-modal-actions">
+        <button type="button" id="crop-cancel-btn" class="btn-secondary">Cancelar</button>
+        <button type="button" id="crop-confirm-btn" class="btn-primary">Usar esta capa</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/ficha-form.js?v=4"></script>
 </body>
 </html>

@@ -1,7 +1,10 @@
 import { supabase, TEMAS } from './supabaseClient.js';
 import { requireSession, bindLogout } from './common.js';
+import { initThemeToggle } from './theme.js';
+import { openCropModal } from './coverCrop.js';
 
 bindLogout();
+initThemeToggle();
 
 const params = new URLSearchParams(window.location.search);
 const fichaId = params.get('id');
@@ -13,7 +16,7 @@ temasGrid.innerHTML = TEMAS.map(
 
 let session = null;
 let existingCapaPath = null;
-let removeOldCoverFile = null;
+let pendingCoverBlob = null;
 
 (async () => {
   session = await requireSession();
@@ -74,11 +77,17 @@ function showError(msg) {
   el.classList.remove('hidden');
 }
 
-document.getElementById('capa').addEventListener('change', (e) => {
+document.getElementById('capa').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
+
+  const croppedBlob = await openCropModal(file);
+  e.target.value = '';
+  if (!croppedBlob) return;
+
+  pendingCoverBlob = croppedBlob;
   const preview = document.getElementById('cover-preview');
-  preview.src = URL.createObjectURL(file);
+  preview.src = URL.createObjectURL(croppedBlob);
   preview.classList.remove('hidden');
 });
 
@@ -105,9 +114,8 @@ document.getElementById('ficha-form').addEventListener('submit', async (e) => {
     const tipoInput = document.querySelector('input[name="tipo"]:checked');
 
     let capaPath = existingCapaPath;
-    const fileInput = document.getElementById('capa');
-    if (fileInput.files[0]) {
-      capaPath = await uploadCover(fileInput.files[0]);
+    if (pendingCoverBlob) {
+      capaPath = await uploadCover(pendingCoverBlob);
     }
 
     const payload = {
@@ -146,13 +154,13 @@ document.getElementById('ficha-form').addEventListener('submit', async (e) => {
   }
 });
 
-async function uploadCover(file) {
-  const ext = file.name.split('.').pop().toLowerCase();
-  const filename = `${session.user.id}/${crypto.randomUUID()}.${ext}`;
+async function uploadCover(blob) {
+  const filename = `${session.user.id}/${crypto.randomUUID()}.jpg`;
 
-  const { error } = await supabase.storage.from('covers').upload(filename, file, {
+  const { error } = await supabase.storage.from('covers').upload(filename, blob, {
     cacheControl: '3600',
     upsert: false,
+    contentType: 'image/jpeg',
   });
   if (error) throw error;
 

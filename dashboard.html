@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <script>(function(){try{var t=localStorage.getItem("biblioteca-theme");document.documentElement.setAttribute("data-theme", t==="dark"?"dark":"light");}catch(e){}})();</script>
   <meta charset="UTF-8">
   <title>Minha Biblioteca</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,17 +12,38 @@
 <body>
   <header class="app-header">
     <h1>📚 Minha Biblioteca</h1>
-    <button id="logout-btn" class="btn-link">Sair</button>
+    <div class="header-actions">
+      <button id="theme-toggle-btn" class="btn-link" title="Alternar tema" aria-label="Alternar tema claro/escuro">🌙</button>
+      <button id="logout-btn" class="btn-link">Sair</button>
+    </div>
   </header>
 
   <div class="container">
+    <div class="stats-grid hidden" id="stats-grid"></div>
+
     <div class="toolbar">
       <h2>Fichas de leitura</h2>
-      <a href="ficha-form.html" class="btn-primary">+ Nova ficha</a>
+      <div class="toolbar-actions">
+        <button id="export-all-btn" class="btn-secondary hidden">⬇ Exportar estante (PDF)</button>
+        <a href="ficha-form.html" class="btn-primary">+ Nova ficha</a>
+      </div>
     </div>
 
     <div class="search-bar hidden" id="search-bar">
-      <input type="search" id="search-input" placeholder="Buscar por nome da ficha, título ou autor...">
+      <input type="search" id="search-input" placeholder="Buscar por nome da ficha, título ou autor... (atalho: /)">
+      <div class="filters-row">
+        <select id="filter-tema">
+          <option value="">Todos os temas</option>
+        </select>
+        <select id="filter-avaliacao">
+          <option value="">Todas as avaliações</option>
+          <option value="5">★★★★★ (5)</option>
+          <option value="4">★★★★☆ (4+)</option>
+          <option value="3">★★★☆☆ (3+)</option>
+          <option value="2">★★☆☆☆ (2+)</option>
+          <option value="1">★☆☆☆☆ (1+)</option>
+        </select>
+      </div>
     </div>
 
     <div class="loading-state" id="loading-state">Carregando sua estante...</div>
@@ -32,12 +54,13 @@
     </div>
 
     <div class="empty-state hidden" id="no-results-state">
-      <p>Nenhuma ficha encontrada para essa busca.</p>
+      <p>Nenhuma ficha encontrada para essa busca/filtro.</p>
     </div>
 
     <div class="fichas-grid hidden" id="fichas-grid"></div>
   </div>
 
-  <script type="module" src="js/dashboard.js?v=4"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script type="module" src="js/dashboard.js?v=5"></script>
 </body>
 </html>
