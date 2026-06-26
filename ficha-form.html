@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Ficha de leitura</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1>📚 Minha Biblioteca</h1>
+    <a href="dashboard.html" class="btn-link">Voltar</a>
+  </header>
+
+  <div class="container">
+    <div class="toolbar">
+      <h2 id="form-title">Nova ficha de leitura</h2>
+    </div>
+
+    <div class="error-msg hidden" id="error-msg" style="margin-bottom:18px;"></div>
+
+    <form class="ficha-form" id="ficha-form">
+      <input type="hidden" id="ficha-id">
+
+      <div class="form-group full">
+        <label for="nome_ficha">Nome da ficha (como vai aparecer na sua estante) *</label>
+        <input type="text" id="nome_ficha" required maxlength="120" placeholder="Ex: O Hobbit - releitura 2026">
+      </div>
+
+      <div class="form-group full">
+        <label>Capa do livro</label>
+        <div class="cover-upload">
+          <img id="cover-preview" class="hidden" alt="Capa">
+          <input type="file" id="capa" accept="image/png,image/jpeg,image/webp">
+          <span class="field-hint">PNG, JPG ou WEBP, até 8MB</span>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="titulo">Título</label>
+          <input type="text" id="titulo">
+        </div>
+        <div class="form-group">
+          <label for="autor">Autor</label>
+          <input type="text" id="autor">
+        </div>
+        <div class="form-group">
+          <label for="editora">Editora</label>
+          <input type="text" id="editora">
+        </div>
+        <div class="form-group">
+          <label for="numero_paginas">Número de páginas</label>
+          <input type="number" id="numero_paginas" min="0">
+        </div>
+
+        <div class="form-group">
+          <label>Avaliação</label>
+          <div class="star-input" id="star-input">
+            <input type="radio" id="star5" name="avaliacao" value="5"><label for="star5">★</label>
+            <input type="radio" id="star4" name="avaliacao" value="4"><label for="star4">★</label>
+            <input type="radio" id="star3" name="avaliacao" value="3"><label for="star3">★</label>
+            <input type="radio" id="star2" name="avaliacao" value="2"><label for="star2">★</label>
+            <input type="radio" id="star1" name="avaliacao" value="1"><label for="star1">★</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Tipo de livro</label>
+          <div class="radio-row">
+            <label><input type="radio" name="tipo" value="fisico"> Físico</label>
+            <label><input type="radio" name="tipo" value="digital"> Digital</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="inicio_leitura">Início da leitura</label>
+          <input type="date" id="inicio_leitura">
+        </div>
+        <div class="form-group">
+          <label for="termino_leitura">Término da leitura</label>
+          <input type="date" id="termino_leitura">
+        </div>
+      </div>
+
+      <div class="form-group full">
+        <label>Temas abordados</label>
+        <div class="checkbox-grid" id="temas-grid"></div>
+      </div>
+
+      <div class="form-group full">
+        <label for="frase_favorita">Frase favorita</label>
+        <textarea id="frase_favorita"></textarea>
+      </div>
+
+      <div class="form-group full">
+        <label for="personagens">Personagens</label>
+        <textarea id="personagens"></textarea>
+      </div>
+
+      <div class="form-group full">
+        <label for="criticas">Críticas</label>
+        <textarea id="criticas"></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" id="submit-btn">Criar ficha</button>
+        <a href="dashboard.html" class="btn-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+
+  <script type="module" src="js/ficha-form.js"></script>
+</body>
+</html>

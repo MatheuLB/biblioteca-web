@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Ficha de leitura</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1>📚 Minha Biblioteca</h1>
+    <a href="dashboard.html" class="btn-link">Voltar</a>
+  </header>
+
+  <div class="container">
+    <div class="loading-state" id="loading-state">Carregando ficha...</div>
+
+    <div class="ficha-detail hidden" id="ficha-detail">
+      <div class="ficha-detail-header">
+        <div class="ficha-detail-cover" id="ficha-cover"></div>
+        <div class="ficha-detail-main">
+          <span class="tab-label" id="ficha-nome" style="color:#b08d3f; text-transform:uppercase; font-size:12px; letter-spacing:1px;"></span>
+          <h2 id="ficha-titulo"></h2>
+          <div class="autor" id="ficha-autor"></div>
+          <div class="ficha-stars" id="ficha-stars" style="margin-top:8px; font-size:18px;"></div>
+
+          <dl>
+            <dt>Editora</dt><dd id="ficha-editora">-</dd>
+            <dt>Páginas</dt><dd id="ficha-paginas">-</dd>
+            <dt>Tipo</dt><dd id="ficha-tipo">-</dd>
+            <dt>Início</dt><dd id="ficha-inicio">-</dd>
+            <dt>Término</dt><dd id="ficha-termino">-</dd>
+          </dl>
+
+          <div style="margin-top:14px;" id="ficha-temas"></div>
+        </div>
+      </div>
+
+      <div class="ficha-section">
+        <h3>Frase favorita</h3>
+        <p id="ficha-frase">-</p>
+      </div>
+      <div class="ficha-section">
+        <h3>Personagens</h3>
+        <p id="ficha-personagens">-</p>
+      </div>
+      <div class="ficha-section">
+        <h3>Críticas</h3>
+        <p id="ficha-criticas">-</p>
+      </div>
+
+      <div class="ficha-detail-actions">
+        <button class="btn-primary" id="export-pdf-btn">⬇ Exportar PDF</button>
+        <a href="#" id="edit-link" class="btn-secondary">Editar</a>
+        <button class="btn-danger" id="delete-btn">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script type="module" src="js/ficha-view.js"></script>
+</body>
+</html>
