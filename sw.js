@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'biblioteca-v1';
+const CACHE_VERSION = 'biblioteca-v2';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -112,18 +112,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Capas de livro e fontes externas: stale-while-revalidate
+  // Capas de livro: stale-while-revalidate
+  // Importante: nunca cachear nem servir respostas "opacas" (status 0, tipo
+  // 'opaque') — elas acontecem quando a requisição é feita em modo no-cors
+  // (ex.: <img> sem o atributo crossorigin) e têm o corpo ilegível. Servir
+  // uma resposta opaca para um fetch() que precisa ler os bytes (como na
+  // geração de PDF) resulta numa imagem vazia que falha silenciosamente.
   if (isSupabaseRequest(url) && url.pathname.includes('/storage/')) {
     event.respondWith(
       caches.open(RUNTIME_CACHE).then((cache) =>
         cache.match(req).then((cached) => {
+          const usableCached = cached && cached.type !== 'opaque' ? cached : null;
           const fetchPromise = fetch(req)
             .then((res) => {
-              cache.put(req, res.clone());
+              if (res.type !== 'opaque') {
+                cache.put(req, res.clone());
+              }
               return res;
             })
-            .catch(() => cached);
-          return cached || fetchPromise;
+            .catch(() => usableCached);
+          return usableCached || fetchPromise;
         })
       )
     );

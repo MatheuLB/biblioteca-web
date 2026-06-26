@@ -235,7 +235,7 @@ function formatDate(isoDate) {
 
 function renderCard(f) {
   const cover = f.capa_path
-    ? `<img src="${escapeHtml(f.capa_path)}" alt="Capa de ${escapeHtml(f.titulo)}">`
+    ? `<img src="${escapeHtml(f.capa_path)}" alt="Capa de ${escapeHtml(f.titulo)}" crossorigin="anonymous">`
     : `<span class="placeholder">Sem capa</span>`;
 
   return `

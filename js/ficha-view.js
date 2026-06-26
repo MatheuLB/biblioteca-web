@@ -43,7 +43,7 @@ let currentFicha = null;
 
 function renderFicha(f) {
   document.getElementById('ficha-cover').innerHTML = f.capa_path
-    ? `<img src="${escapeHtml(f.capa_path)}" alt="Capa">`
+    ? `<img src="${escapeHtml(f.capa_path)}" alt="Capa" crossorigin="anonymous">`
     : `<span class="placeholder">Sem capa</span>`;
 
   document.getElementById('ficha-nome').textContent = f.nome_ficha || '';
