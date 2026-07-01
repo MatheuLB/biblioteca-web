@@ -1,7 +1,5 @@
 export const API_BASE = 'https://raspberrypi.tail4f88e2.ts.net';
 
-export const FIXED_EMAIL = 'matheuslazzarottobortolini@outlook.com';
-
 export const TEMAS = [
   { key: 'romance', label: 'Romance' },
   { key: 'aventura', label: 'Aventura' },
@@ -57,13 +55,21 @@ async function request(path, options = {}) {
   return body;
 }
 
-export async function login(password) {
+export async function login(email, password) {
   const body = await request('/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: FIXED_EMAIL, password }),
+    body: JSON.stringify({ email, password }),
   });
   setToken(body.access_token);
+}
+
+export async function register(email, password) {
+  return request('/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
 }
 
 export function logout() {

@@ -26,16 +26,34 @@
       <h1>Biblioteca Pessoal</h1>
       <div class="subtitle">Fichas de leitura</div>
 
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" id="tab-login">Entrar</button>
+        <button type="button" class="auth-tab" id="tab-register">Criar conta</button>
+      </div>
+
       <form class="login-form" id="login-form">
-        <label for="password">Senha de acesso</label>
-        <input type="password" id="password" name="password" required autofocus autocomplete="current-password">
+        <label for="login-email">E-mail</label>
+        <input type="email" id="login-email" name="email" required autofocus autocomplete="email">
+        <label for="password">Senha</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password">
         <button type="submit" class="btn-gold" id="login-btn">Entrar</button>
       </form>
 
+      <form class="login-form hidden" id="register-form">
+        <label for="register-email">E-mail</label>
+        <input type="email" id="register-email" name="email" required autocomplete="email">
+        <label for="register-password">Senha</label>
+        <input type="password" id="register-password" name="password" required autocomplete="new-password">
+        <label for="register-password-confirm">Confirmar senha</label>
+        <input type="password" id="register-password-confirm" name="password-confirm" required autocomplete="new-password">
+        <button type="submit" class="btn-gold" id="register-btn">Criar conta</button>
+      </form>
+
       <div class="error-msg hidden" id="error-msg"></div>
+      <div class="success-msg hidden" id="success-msg"></div>
     </div>
   </div>
 
-  <script type="module" src="js/login.js?v=4"></script>
+  <script type="module" src="js/login.js?v=5"></script>
 </body>
 </html>
