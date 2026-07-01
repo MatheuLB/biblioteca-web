@@ -1,4 +1,4 @@
-import { supabase, TEMAS } from './supabaseClient.js';
+import { TEMAS, listFichas, deleteFicha, sortFichas } from './apiClient.js';
 import { requireSession, bindLogout, starsDisplay, escapeHtml, initOfflineBanner } from './common.js?v=2';
 import { drawFichaPage } from './pdfFicha.js';
 import { initThemeToggle } from './theme.js';
@@ -9,19 +9,17 @@ bindLogout();
 initThemeToggle();
 registerServiceWorker();
 initOfflineBanner(async () => {
-  const result = await flushQueue(supabase);
+  const result = await flushQueue();
   if (result.synced > 0) {
-    const { data: refreshed } = await supabase
-      .from('fichas')
-      .select('*')
-      .order('inicio_leitura', { ascending: false, nullsFirst: false })
-      .order('updated_at', { ascending: false });
-    if (refreshed) {
+    try {
+      const refreshed = sortFichas(await listFichas());
       allFichas = refreshed;
       cacheFichas(allFichas);
       populateTemaFilter();
       renderStats(allFichas);
       applyFilters();
+    } catch (e) {
+      // sem conexão ou erro na API — mantém os dados atuais
     }
   }
   return result;
@@ -33,22 +31,23 @@ let allFichas = [];
   const session = await requireSession();
   if (!session) return;
 
-  const { data: fichas, error } = await supabase
-    .from('fichas')
-    .select('*')
-    .order('inicio_leitura', { ascending: false, nullsFirst: false })
-    .order('updated_at', { ascending: false });
+  let fichas = null;
+  try {
+    fichas = sortFichas(await listFichas());
+  } catch (e) {
+    fichas = null;
+  }
 
   document.getElementById('loading-state').classList.add('hidden');
 
-  if (error || !navigator.onLine) {
+  if (!fichas || !navigator.onLine) {
     allFichas = getCachedFichas();
     if (allFichas.length === 0) {
       document.getElementById('empty-state').classList.remove('hidden');
       return;
     }
   } else {
-    if (!fichas || fichas.length === 0) {
+    if (fichas.length === 0) {
       document.getElementById('empty-state').classList.remove('hidden');
       return;
     }
@@ -212,9 +211,10 @@ function bindDeleteButtons() {
         return;
       }
 
-      const { error } = await supabase.from('fichas').delete().eq('id', id);
-      if (error) {
-        alert('Erro ao excluir: ' + error.message);
+      try {
+        await deleteFicha(id);
+      } catch (err) {
+        alert('Erro ao excluir: ' + err.message);
         btn.disabled = false;
         return;
       }

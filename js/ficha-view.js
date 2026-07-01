@@ -1,4 +1,4 @@
-import { supabase, TEMAS } from './supabaseClient.js';
+import { TEMAS, getFicha, deleteFicha } from './apiClient.js';
 import { requireSession, bindLogout, starsDisplay, escapeHtml, initOfflineBanner } from './common.js?v=2';
 import { drawFichaPage } from './pdfFicha.js';
 import { initThemeToggle } from './theme.js';
@@ -8,7 +8,7 @@ import { getCachedFichas, enqueueDelete, cacheFichas, flushQueue } from './offli
 bindLogout();
 initThemeToggle();
 registerServiceWorker();
-initOfflineBanner(() => flushQueue(supabase));
+initOfflineBanner(() => flushQueue());
 
 const params = new URLSearchParams(window.location.search);
 const fichaId = params.get('id');
@@ -24,11 +24,16 @@ let currentFicha = null;
     return;
   }
 
-  const { data: ficha, error } = await supabase.from('fichas').select('*').eq('id', fichaId).single();
+  let ficha = null;
+  try {
+    ficha = await getFicha(fichaId);
+  } catch (e) {
+    ficha = null;
+  }
 
   document.getElementById('loading-state').classList.add('hidden');
 
-  const fichaToRender = !error && ficha ? ficha : getCachedFichas().find((f) => f.id === fichaId);
+  const fichaToRender = ficha || getCachedFichas().find((f) => f.id === fichaId);
 
   if (!fichaToRender) {
     document.getElementById('loading-state').classList.remove('hidden');
@@ -79,7 +84,7 @@ document.getElementById('delete-btn').addEventListener('click', async () => {
     return;
   }
 
-  await supabase.from('fichas').delete().eq('id', fichaId);
+  await deleteFicha(fichaId);
   window.location.href = 'dashboard.html';
 });
 

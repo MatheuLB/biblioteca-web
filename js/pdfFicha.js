@@ -1,4 +1,4 @@
-import { TEMAS } from './supabaseClient.js';
+import { TEMAS } from './apiClient.js';
 
 export async function fetchImageAsDataUrl(url) {
   const res = await fetch(url);

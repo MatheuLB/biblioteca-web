@@ -1,4 +1,4 @@
-import { supabase, TEMAS } from './supabaseClient.js';
+import { TEMAS, getFicha, createFicha, updateFicha, uploadCapa } from './apiClient.js';
 import { requireSession, bindLogout, initOfflineBanner } from './common.js?v=2';
 import { initThemeToggle } from './theme.js';
 import { openCropModal } from './coverCrop.js';
@@ -8,7 +8,7 @@ import { flushQueue } from './offlineQueue.js';
 bindLogout();
 initThemeToggle();
 registerServiceWorker();
-initOfflineBanner(() => flushQueue(supabase));
+initOfflineBanner(() => flushQueue());
 
 const params = new URLSearchParams(window.location.search);
 const fichaId = params.get('id');
@@ -18,12 +18,11 @@ temasGrid.innerHTML = TEMAS.map(
   (t) => `<label><input type="checkbox" data-tema="${t.key}"> ${t.label}</label>`
 ).join('');
 
-let session = null;
 let existingCapaPath = null;
 let pendingCoverBlob = null;
 
 (async () => {
-  session = await requireSession();
+  const session = await requireSession();
   if (!session) return;
 
   if (fichaId) {
@@ -34,8 +33,13 @@ let pendingCoverBlob = null;
 })();
 
 async function loadFicha(id) {
-  const { data: ficha, error } = await supabase.from('fichas').select('*').eq('id', id).single();
-  if (error || !ficha) {
+  let ficha = null;
+  try {
+    ficha = await getFicha(id);
+  } catch (e) {
+    ficha = null;
+  }
+  if (!ficha) {
     showError('Ficha não encontrada.');
     return;
   }
@@ -147,12 +151,9 @@ document.getElementById('ficha-form').addEventListener('submit', async (e) => {
 
     let savedId = fichaId;
     if (fichaId) {
-      const { error } = await supabase.from('fichas').update(payload).eq('id', fichaId);
-      if (error) throw error;
+      await updateFicha(fichaId, payload);
     } else {
-      payload.user_id = session.user.id;
-      const { data, error } = await supabase.from('fichas').insert(payload).select('id').single();
-      if (error) throw error;
+      const data = await createFicha(payload);
       savedId = data.id;
     }
 
@@ -165,15 +166,5 @@ document.getElementById('ficha-form').addEventListener('submit', async (e) => {
 });
 
 async function uploadCover(blob) {
-  const filename = `${session.user.id}/${crypto.randomUUID()}.jpg`;
-
-  const { error } = await supabase.storage.from('covers').upload(filename, blob, {
-    cacheControl: '3600',
-    upsert: false,
-    contentType: 'image/jpeg',
-  });
-  if (error) throw error;
-
-  const { data } = supabase.storage.from('covers').getPublicUrl(filename);
-  return data.publicUrl;
+  return uploadCapa(blob);
 }

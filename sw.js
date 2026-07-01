@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'biblioteca-v2';
+const CACHE_VERSION = 'biblioteca-v3';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -14,7 +14,7 @@ const SHELL_FILES = [
   'icons/icon-512.png',
   'icons/apple-touch-icon.png',
   'icons/favicon-32.png',
-  'js/supabaseClient.js',
+  'js/apiClient.js',
   'js/common.js?v=2',
   'js/theme.js',
   'js/pdfFicha.js',
@@ -55,8 +55,10 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-function isSupabaseRequest(url) {
-  return url.hostname.endsWith('.supabase.co');
+const API_HOSTNAME = 'raspberrypi.tail4f88e2.ts.net';
+
+function isApiRequest(url) {
+  return url.hostname === API_HOSTNAME;
 }
 
 function isSameOriginAsset(url) {
@@ -97,8 +99,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Dados da API (PostgREST): network-first, com fallback para o cache quando offline
-  if (isSupabaseRequest(url) && url.pathname.includes('/rest/v1/')) {
+  // Dados da API: network-first, com fallback para o cache quando offline
+  if (isApiRequest(url) && url.pathname.startsWith('/fichas')) {
     event.respondWith(
       fetch(req)
         .then((res) => {
@@ -118,7 +120,7 @@ self.addEventListener('fetch', (event) => {
   // (ex.: <img> sem o atributo crossorigin) e têm o corpo ilegível. Servir
   // uma resposta opaca para um fetch() que precisa ler os bytes (como na
   // geração de PDF) resulta numa imagem vazia que falha silenciosamente.
-  if (isSupabaseRequest(url) && url.pathname.includes('/storage/')) {
+  if (isApiRequest(url) && url.pathname.startsWith('/capas/')) {
     event.respondWith(
       caches.open(RUNTIME_CACHE).then((cache) =>
         cache.match(req).then((cached) => {

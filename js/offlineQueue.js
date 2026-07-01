@@ -1,3 +1,5 @@
+import { deleteFicha } from './apiClient.js';
+
 const CACHE_KEY = 'biblioteca-cache-fichas';
 const QUEUE_KEY = 'biblioteca-offline-queue';
 
@@ -39,7 +41,7 @@ export function getQueueSize() {
   return getQueue().length;
 }
 
-export async function flushQueue(supabase) {
+export async function flushQueue() {
   const queue = getQueue();
   if (queue.length === 0) return { synced: 0, remaining: 0 };
 
@@ -49,8 +51,7 @@ export async function flushQueue(supabase) {
   for (const op of queue) {
     try {
       if (op.type === 'delete') {
-        const { error } = await supabase.from('fichas').delete().eq('id', op.fichaId);
-        if (error) throw error;
+        await deleteFicha(op.fichaId);
         synced++;
       }
     } catch (err) {

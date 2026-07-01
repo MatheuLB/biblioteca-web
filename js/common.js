@@ -1,19 +1,24 @@
-import { supabase } from './supabaseClient.js';
+import { isLoggedIn, fetchMe, logout } from './apiClient.js';
 
 export async function requireSession() {
-  const { data } = await supabase.auth.getSession();
-  if (!data.session) {
+  if (!isLoggedIn()) {
     window.location.href = 'index.html';
     return null;
   }
-  return data.session;
+  try {
+    return await fetchMe();
+  } catch (e) {
+    logout();
+    window.location.href = 'index.html';
+    return null;
+  }
 }
 
 export function bindLogout() {
   const btn = document.getElementById('logout-btn');
   if (!btn) return;
-  btn.addEventListener('click', async () => {
-    await supabase.auth.signOut();
+  btn.addEventListener('click', () => {
+    logout();
     window.location.href = 'index.html';
   });
 }

@@ -1,4 +1,4 @@
-import { supabase, FIXED_EMAIL } from './supabaseClient.js';
+import { login, isLoggedIn } from './apiClient.js';
 import { registerServiceWorker } from './pwa.js';
 
 registerServiceWorker();
@@ -19,12 +19,9 @@ function renderShelf(elId, count, offset, heightBase, heightStep, heightMod) {
 renderShelf('shelf-top', 28, 0, 40, 8, 5);
 renderShelf('shelf-bottom', 28, 3, 40, 7, 6);
 
-(async () => {
-  const { data } = await supabase.auth.getSession();
-  if (data.session) {
-    window.location.href = 'dashboard.html';
-  }
-})();
+if (isLoggedIn()) {
+  window.location.href = 'dashboard.html';
+}
 
 const form = document.getElementById('login-form');
 const errorMsg = document.getElementById('error-msg');
@@ -38,12 +35,9 @@ form.addEventListener('submit', async (e) => {
 
   const password = document.getElementById('password').value;
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email: FIXED_EMAIL,
-    password,
-  });
-
-  if (error) {
+  try {
+    await login(password);
+  } catch (e) {
     errorMsg.textContent = 'Senha incorreta. Tente novamente.';
     errorMsg.classList.remove('hidden');
     loginBtn.disabled = false;
