@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <script>(function(){try{var t=localStorage.getItem("biblioteca-theme");document.documentElement.setAttribute("data-theme", t==="light"?"light":"dark");}catch(e){}})();</script>
+  <meta charset="UTF-8">
+  <title>Estatísticas — Minha Biblioteca</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#1c2f4a">
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-root"></div>
+
+    <div class="main-content">
+      <div class="topbar">
+        <div class="welcome">
+          <h1><span class="icon-svg" style="width:20px;height:20px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="6"/><line x1="18" y1="20" x2="18" y2="14"/></svg></span> Estatísticas</h1>
+          <p>Um raio-x da sua jornada de leitura</p>
+        </div>
+        <div class="topbar-actions">
+          <button id="theme-toggle-btn" class="icon-btn-dark" title="Alternar tema" aria-label="Alternar tema claro/escuro">🌙</button>
+        </div>
+      </div>
+
+      <div class="loading-state" id="loading-state">Carregando estatísticas...</div>
+      <div class="empty-state hidden" id="empty-state">
+        <p>Ainda não há fichas para gerar estatísticas.</p>
+        <p><a href="ficha-form.html" class="btn-purple" style="display:inline-block; margin-top:10px;">Criar primeira ficha</a></p>
+      </div>
+
+      <div id="stats-content" class="hidden">
+        <div class="stat-cards-row" id="stat-cards-row"></div>
+
+        <div class="section-card">
+          <div class="section-card-header">
+            <div>
+              <h2>Temas mais lidos</h2>
+              <p>Quantas fichas você tem em cada tema</p>
+            </div>
+          </div>
+          <div id="temas-bars"></div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-card-header">
+            <div>
+              <h2>Distribuição de avaliações</h2>
+              <p>Quantas fichas você deu cada nota</p>
+            </div>
+          </div>
+          <div id="avaliacoes-bars"></div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-card-header">
+            <div>
+              <h2>Livros concluídos por ano</h2>
+              <p>Baseado na data de término de leitura</p>
+            </div>
+          </div>
+          <div id="anos-bars"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/estatisticas.js?v=1"></script>
+</body>
+</html>

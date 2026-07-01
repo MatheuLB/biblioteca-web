@@ -1,12 +1,11 @@
-import { TEMAS, listFichas, deleteFicha, sortFichas } from './apiClient.js';
-import { requireSession, bindLogout, starsDisplay, escapeHtml, initOfflineBanner } from './common.js?v=2';
+import { TEMAS, listFichas, deleteFicha, sortFichas, computeStats } from './apiClient.js';
+import { requireSession, starsDisplay, escapeHtml, initOfflineBanner } from './common.js?v=2';
 import { drawFichaPage } from './pdfFicha.js';
-import { initThemeToggle } from './theme.js';
+import { renderSidebar } from './appShell.js';
 import { registerServiceWorker } from './pwa.js';
 import { cacheFichas, getCachedFichas, enqueueDelete, flushQueue } from './offlineQueue.js';
+import { icon } from './icons.js';
 
-bindLogout();
-initThemeToggle();
 registerServiceWorker();
 initOfflineBanner(async () => {
   const result = await flushQueue();
@@ -30,6 +29,8 @@ let allFichas = [];
 (async () => {
   const session = await requireSession();
   if (!session) return;
+
+  renderSidebar('Início');
 
   let fichas = null;
   try {
@@ -58,6 +59,10 @@ let allFichas = [];
   document.getElementById('search-bar').classList.remove('hidden');
   document.getElementById('export-all-btn').classList.remove('hidden');
   populateTemaFilter();
+
+  const temaParam = new URLSearchParams(window.location.search).get('tema');
+  if (temaParam) document.getElementById('filter-tema').value = temaParam;
+
   renderStats(allFichas);
   applyFilters();
 
@@ -140,39 +145,48 @@ function applyFilters() {
   renderGrid(filtered);
 }
 
+const STAT_CARDS_DEF = [
+  { accent: '#8b6df0', icon: 'book', key: 'totalLivros', label: 'Livros na estante', link: 'Ver todos →', href: '#fichas-grid' },
+  { accent: '#34c58f', icon: 'fileText', key: 'totalPaginas', label: 'Páginas registradas', link: 'Ver progresso →', href: 'estatisticas.html' },
+  { accent: '#e0b84a', icon: 'star', key: 'mediaAvaliacao', label: 'Avaliação média', link: 'Ver avaliações →', href: 'estatisticas.html' },
+  { accent: '#e0607a', icon: 'tag', key: 'temaTopo', label: 'Tema mais lido', link: 'Explorar temas →', href: 'temas.html' },
+];
+
 function renderStats(fichas) {
-  const totalLivros = fichas.length;
-  const totalPaginas = fichas.reduce((sum, f) => sum + (f.numero_paginas || 0), 0);
-  const avaliadas = fichas.filter((f) => f.avaliacao > 0);
-  const mediaAvaliacao = avaliadas.length
-    ? (avaliadas.reduce((sum, f) => sum + f.avaliacao, 0) / avaliadas.length).toFixed(1)
-    : '—';
+  const stats = computeStats(fichas);
+  const values = {
+    totalLivros: stats.totalLivros,
+    totalPaginas: stats.totalPaginas.toLocaleString('pt-BR'),
+    mediaAvaliacao: stats.mediaAvaliacao ? stats.mediaAvaliacao.toFixed(1) : '—',
+    temaTopo: stats.temaTopo,
+  };
 
-  const temaCounts = {};
-  fichas.forEach((f) => (f.temas || []).forEach((k) => (temaCounts[k] = (temaCounts[k] || 0) + 1)));
-  let temaTopo = '—';
-  let maxCount = 0;
-  Object.entries(temaCounts).forEach(([key, count]) => {
-    if (count > maxCount) {
-      maxCount = count;
-      const temaInfo = TEMAS.find((t) => t.key === key);
-      temaTopo = temaInfo ? temaInfo.label : key;
-    }
-  });
-
-  const stats = [
-    { label: 'Livros na estante', value: totalLivros },
-    { label: 'Páginas registradas', value: totalPaginas.toLocaleString('pt-BR') },
-    { label: 'Avaliação média', value: mediaAvaliacao === '—' ? '—' : `${mediaAvaliacao} ★` },
-    { label: 'Tema mais lido', value: temaTopo },
-  ];
-
-  const grid = document.getElementById('stats-grid');
-  grid.innerHTML = stats
-    .map((s) => `<div class="stat-card"><span class="stat-value">${s.value}</span><span class="stat-label">${s.label}</span></div>`)
-    .join('');
-  grid.classList.remove('hidden');
+  const row = document.getElementById('stat-cards-row');
+  row.innerHTML = STAT_CARDS_DEF.map(
+    (c) => `
+      <div class="stat-card-dark" style="--accent:${c.accent}">
+        <div class="icon">${icon(c.icon)}</div>
+        <div class="value">${values[c.key]}</div>
+        <div class="label">${c.label}</div>
+        <a class="link" href="${c.href}">${c.link}</a>
+      </div>`
+  ).join('');
 }
+
+const DICA_CARD_HTML = `
+  <div class="dica-card">
+    <svg class="dica-illustration" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+      <rect x="14" y="46" width="50" height="8" rx="2" fill="#2d4a7a"/>
+      <rect x="18" y="38" width="42" height="8" rx="2" fill="#3f7a5c"/>
+      <rect x="22" y="30" width="34" height="8" rx="2" fill="#c0622e"/>
+      <path d="M40 10 q6 0 6 8 v6 h-12 v-6 q0 -8 6 -8Z" fill="#8b6df0" opacity="0.85"/>
+      <rect x="34" y="24" width="12" height="6" rx="1" fill="#6d54d8"/>
+      <circle cx="40" cy="14" r="2" fill="#f0d98c"/>
+    </svg>
+    <h4>${icon('sparkle')} Dica de explorador</h4>
+    <p>Mantenha suas fichas sempre atualizadas! Assim você acompanha sua jornada e descobre novas aventuras.</p>
+  </div>
+`;
 
 function renderGrid(list) {
   const grid = document.getElementById('fichas-grid');
@@ -189,9 +203,27 @@ function renderGrid(list) {
   noResultsState.classList.add('hidden');
   emptyState.classList.add('hidden');
   grid.classList.remove('hidden');
-  grid.innerHTML = list.map(renderCard).join('');
+  grid.innerHTML = list.map(renderCard).join('') + DICA_CARD_HTML;
   bindDeleteButtons();
+  bindMenuToggles();
 }
+
+function bindMenuToggles() {
+  document.querySelectorAll('.ficha-menu-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const dropdown = document.getElementById(`menu-${btn.dataset.menuToggle}`);
+      const isHidden = dropdown.classList.contains('hidden');
+      document.querySelectorAll('.ficha-menu-dropdown').forEach((d) => d.classList.add('hidden'));
+      if (isHidden) dropdown.classList.remove('hidden');
+    });
+  });
+}
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('.ficha-menu-dropdown').forEach((d) => d.classList.add('hidden'));
+});
 
 function bindDeleteButtons() {
   document.querySelectorAll('.btn-delete-ficha').forEach((btn) => {
@@ -226,8 +258,6 @@ function bindDeleteButtons() {
   });
 }
 
-const TRASH_ICON = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>`;
-
 function formatDate(isoDate) {
   const [year, month, day] = isoDate.split('-');
   return `${day}/${month}/${year}`;
@@ -240,20 +270,26 @@ function renderCard(f) {
 
   return `
     <div class="ficha-card">
-      <a href="ficha-view.html?id=${f.id}" class="ficha-cover">${cover}</a>
+      <div class="ficha-cover-wrap">
+        <a href="ficha-view.html?id=${f.id}" class="ficha-cover">${cover}</a>
+        <div class="ficha-menu">
+          <button class="ficha-menu-btn" data-menu-toggle="${f.id}" aria-label="Mais opções">${icon('dots')}</button>
+          <div class="ficha-menu-dropdown hidden" id="menu-${f.id}">
+            <a href="ficha-view.html?id=${f.id}">${icon('fileText')} Abrir</a>
+            <a href="ficha-form.html?id=${f.id}">${icon('gear')} Editar</a>
+            <button class="btn-delete-ficha" data-id="${f.id}">${icon('trash')} Excluir</button>
+          </div>
+        </div>
+      </div>
       <div class="ficha-info">
         <span class="tab-label">${escapeHtml(f.nome_ficha)}</span>
         <h3>${escapeHtml(f.titulo) || '(sem título)'}</h3>
         <span class="meta">${escapeHtml(f.autor) || ''}</span>
-        <span class="ficha-stars">${starsDisplay(f.avaliacao)}</span>
-        ${f.inicio_leitura ? `<span class="meta">Início: ${formatDate(f.inicio_leitura)}</span>` : ''}
-      </div>
-      <div class="ficha-actions">
-        <a href="ficha-view.html?id=${f.id}" class="btn-secondary">Abrir</a>
-        <a href="ficha-form.html?id=${f.id}" class="btn-secondary">Editar</a>
-        <button class="btn-icon-delete btn-delete-ficha" data-id="${f.id}" title="Excluir ficha" aria-label="Excluir ficha">
-          ${TRASH_ICON}
-        </button>
+        <div class="ficha-rating-row">
+          <span class="ficha-stars">${starsDisplay(f.avaliacao)}</span>
+          ${f.avaliacao ? `<span class="rating-badge">${f.avaliacao}.0</span>` : ''}
+        </div>
+        ${f.inicio_leitura ? `<span class="meta">${icon('calendar')} Início: ${formatDate(f.inicio_leitura)}</span>` : ''}
       </div>
     </div>
   `;

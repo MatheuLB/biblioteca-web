@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'biblioteca-v3';
+const CACHE_VERSION = 'biblioteca-v5';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 
@@ -8,6 +8,10 @@ const SHELL_FILES = [
   'dashboard.html',
   'ficha-form.html',
   'ficha-view.html',
+  'estatisticas.html',
+  'temas.html',
+  'jornada.html',
+  'perfil.html',
   'css/style.css',
   'manifest.webmanifest',
   'icons/icon-192.png',
@@ -15,6 +19,8 @@ const SHELL_FILES = [
   'icons/apple-touch-icon.png',
   'icons/favicon-32.png',
   'js/apiClient.js',
+  'js/appShell.js',
+  'js/icons.js',
   'js/common.js?v=2',
   'js/theme.js',
   'js/pdfFicha.js',
@@ -25,6 +31,10 @@ const SHELL_FILES = [
   'js/dashboard.js',
   'js/ficha-form.js',
   'js/ficha-view.js',
+  'js/estatisticas.js',
+  'js/temas.js',
+  'js/jornada.js',
+  'js/perfil.js',
 ];
 
 self.addEventListener('install', (event) => {

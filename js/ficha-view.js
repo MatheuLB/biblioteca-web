@@ -1,12 +1,10 @@
 import { TEMAS, getFicha, deleteFicha } from './apiClient.js';
-import { requireSession, bindLogout, starsDisplay, escapeHtml, initOfflineBanner } from './common.js?v=2';
+import { requireSession, starsDisplay, escapeHtml, initOfflineBanner } from './common.js?v=2';
 import { drawFichaPage } from './pdfFicha.js';
-import { initThemeToggle } from './theme.js';
 import { registerServiceWorker } from './pwa.js';
 import { getCachedFichas, enqueueDelete, cacheFichas, flushQueue } from './offlineQueue.js';
+import { renderSidebar } from './appShell.js';
 
-bindLogout();
-initThemeToggle();
 registerServiceWorker();
 initOfflineBanner(() => flushQueue());
 
@@ -18,6 +16,8 @@ let currentFicha = null;
 (async () => {
   const session = await requireSession();
   if (!session) return;
+
+  renderSidebar('Fichas de leitura');
 
   if (!fichaId) {
     window.location.href = 'dashboard.html';

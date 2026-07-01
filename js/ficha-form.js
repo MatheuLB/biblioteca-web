@@ -1,12 +1,10 @@
 import { TEMAS, getFicha, createFicha, updateFicha, uploadCapa } from './apiClient.js';
-import { requireSession, bindLogout, initOfflineBanner } from './common.js?v=2';
-import { initThemeToggle } from './theme.js';
+import { requireSession, initOfflineBanner } from './common.js?v=2';
 import { openCropModal } from './coverCrop.js';
 import { registerServiceWorker } from './pwa.js';
 import { flushQueue } from './offlineQueue.js';
+import { renderSidebar } from './appShell.js';
 
-bindLogout();
-initThemeToggle();
 registerServiceWorker();
 initOfflineBanner(() => flushQueue());
 
@@ -24,6 +22,8 @@ let pendingCoverBlob = null;
 (async () => {
   const session = await requireSession();
   if (!session) return;
+
+  renderSidebar('Fichas de leitura');
 
   if (fichaId) {
     document.getElementById('form-title').textContent = 'Editar ficha';

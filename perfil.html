@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <script>(function(){try{var t=localStorage.getItem("biblioteca-theme");document.documentElement.setAttribute("data-theme", t==="light"?"light":"dark");}catch(e){}})();</script>
+  <meta charset="UTF-8">
+  <title>Perfil — Minha Biblioteca</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#1c2f4a">
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-root"></div>
+
+    <div class="main-content">
+      <div class="topbar">
+        <div class="welcome">
+          <h1><span class="icon-svg" style="width:20px;height:20px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span> Perfil</h1>
+          <p>Informações da sua conta</p>
+        </div>
+        <div class="topbar-actions">
+          <button id="theme-toggle-btn" class="icon-btn-dark" title="Alternar tema" aria-label="Alternar tema claro/escuro">🌙</button>
+        </div>
+      </div>
+
+      <div class="section-card" style="max-width:480px;">
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px;">
+          <span class="icon-svg" style="width:56px; height:56px; border-radius:50%; background:#2a3454; display:flex; align-items:center; justify-content:center; color:#cdd6f0; flex-shrink:0; padding:16px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/></svg></span>
+          <div>
+            <div id="perfil-email" style="color:#f0f2f8; font-weight:700; font-size:16px;">…</div>
+            <div id="perfil-criado" style="color:#7c87a3; font-size:13px; margin-top:2px;"></div>
+          </div>
+        </div>
+
+        <button id="logout-btn" class="btn-danger-dark">Sair da conta</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/perfil.js?v=1"></script>
+</body>
+</html>

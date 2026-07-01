@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <script>(function(){try{var t=localStorage.getItem("biblioteca-theme");document.documentElement.setAttribute("data-theme", t==="light"?"light":"dark");}catch(e){}})();</script>
+  <meta charset="UTF-8">
+  <title>Minha jornada — Minha Biblioteca</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#1c2f4a">
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-root"></div>
+
+    <div class="main-content">
+      <div class="topbar">
+        <div class="welcome">
+          <h1><span class="icon-svg" style="width:20px;height:20px;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg></span> Minha jornada</h1>
+          <p>Acompanhe sua meta de leitura anual</p>
+        </div>
+        <div class="topbar-actions">
+          <button id="theme-toggle-btn" class="icon-btn-dark" title="Alternar tema" aria-label="Alternar tema claro/escuro">🌙</button>
+        </div>
+      </div>
+
+      <div class="loading-state" id="loading-state">Carregando sua jornada...</div>
+
+      <div id="jornada-content" class="hidden">
+        <div class="section-card journey-card">
+          <div class="section-card-header">
+            <div>
+              <h2 id="jornada-titulo">Meta de <span id="jornada-ano"></span></h2>
+              <p id="jornada-resumo"></p>
+            </div>
+          </div>
+          <div class="journey-bar" style="height:14px;"><div class="journey-bar-fill" id="jornada-bar-fill" style="width:0%"></div></div>
+          <div class="journey-meta" style="margin-top:12px; font-size:13px;">
+            <span id="jornada-meta-label"></span>
+            <span id="jornada-pct"></span>
+          </div>
+
+          <form id="meta-form" style="margin-top:22px; display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+            <div>
+              <label for="meta-input" style="display:block; font-size:12px; color:#c7cbe0; margin-bottom:6px;">Nova meta anual (livros)</label>
+              <input type="number" id="meta-input" class="dark-input" min="1" max="365" style="width:120px;">
+            </div>
+            <button type="submit" class="btn-purple" id="meta-save-btn">Salvar meta</button>
+            <span class="error-msg hidden" id="meta-error" style="margin:0;"></span>
+            <span class="success-msg hidden" id="meta-success" style="margin:0;"></span>
+          </form>
+        </div>
+
+        <div class="section-card">
+          <div class="section-card-header">
+            <div>
+              <h2>Livros concluídos este ano</h2>
+              <p>Fichas com data de término de leitura registrada</p>
+            </div>
+          </div>
+          <div id="concluidos-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/jornada.js?v=1"></script>
+</body>
+</html>

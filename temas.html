@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <script>(function(){try{var t=localStorage.getItem("biblioteca-theme");document.documentElement.setAttribute("data-theme", t==="light"?"light":"dark");}catch(e){}})();</script>
+  <meta charset="UTF-8">
+  <title>Explorar temas — Minha Biblioteca</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#1c2f4a">
+</head>
+<body>
+  <div class="app-shell">
+    <div id="sidebar-root"></div>
+
+    <div class="main-content">
+      <div class="topbar">
+        <div class="welcome">
+          <h1><span class="icon-svg" style="width:20px;height:20px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 12.6L12 21.2 2.8 12 11.4 3.4H20.6V12.6z"/><circle cx="16" cy="8" r="1" fill="currentColor"/></svg></span> Explorar temas</h1>
+          <p>Escolha um tema para ver as fichas relacionadas</p>
+        </div>
+        <div class="topbar-actions">
+          <button id="theme-toggle-btn" class="icon-btn-dark" title="Alternar tema" aria-label="Alternar tema claro/escuro">🌙</button>
+        </div>
+      </div>
+
+      <div class="loading-state" id="loading-state">Carregando temas...</div>
+
+      <div class="section-card hidden" id="temas-section">
+        <div class="tema-explore-grid" id="temas-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/temas.js?v=1"></script>
+</body>
+</html>

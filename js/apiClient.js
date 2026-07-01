@@ -80,6 +80,14 @@ export async function fetchMe() {
   return request('/me');
 }
 
+export async function updateMetaAnual(metaAnual) {
+  return request('/me', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ meta_anual: metaAnual }),
+  });
+}
+
 export async function listFichas() {
   return request('/fichas');
 }
@@ -113,6 +121,34 @@ export async function uploadCapa(blob) {
   formData.append('file', blob, 'capa.jpg');
   const body = await request('/upload-capa', { method: 'POST', body: formData });
   return `${API_BASE}${body.url}`;
+}
+
+export function computeStats(fichas) {
+  const totalLivros = fichas.length;
+  const totalPaginas = fichas.reduce((sum, f) => sum + (f.numero_paginas || 0), 0);
+  const avaliadas = fichas.filter((f) => f.avaliacao > 0);
+  const mediaAvaliacao = avaliadas.length
+    ? avaliadas.reduce((sum, f) => sum + f.avaliacao, 0) / avaliadas.length
+    : 0;
+
+  const temaCounts = {};
+  fichas.forEach((f) => (f.temas || []).forEach((k) => (temaCounts[k] = (temaCounts[k] || 0) + 1)));
+
+  let temaTopoKey = null;
+  let maxCount = 0;
+  Object.entries(temaCounts).forEach(([key, count]) => {
+    if (count > maxCount) {
+      maxCount = count;
+      temaTopoKey = key;
+    }
+  });
+  const temaTopo = temaTopoKey ? (TEMAS.find((t) => t.key === temaTopoKey)?.label || temaTopoKey) : '—';
+
+  return { totalLivros, totalPaginas, mediaAvaliacao, temaTopo, temaCounts };
+}
+
+export function livrosLidosNoAno(fichas, year = new Date().getFullYear()) {
+  return fichas.filter((f) => f.termino_leitura && f.termino_leitura.startsWith(String(year))).length;
 }
 
 export function sortFichas(list) {
